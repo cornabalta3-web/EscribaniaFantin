@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema de Gestión Notarial — Prototipo</title>
+<style>
+  :root{
+    --fondo:#f5f4f1; --panel:#fff; --borde:#ddd9d2; --texto:#25211c;
+    --suave:#6f6559; --acento:#7a5c2e; --acento-claro:#f0e7d8;
+    --alerta:#a3521a; --peligro:#9b3232;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;
+       background:var(--fondo);color:var(--texto)}
+  header{background:var(--panel);border-bottom:1px solid var(--borde);
+         padding:14px 22px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0;font-weight:600}
+  header .sub{color:var(--suave);font-size:12px}
+  nav{margin-left:auto;display:flex;gap:4px}
+  nav button{background:none;border:1px solid transparent;padding:7px 14px;
+             border-radius:6px;cursor:pointer;font-size:13px;color:var(--suave)}
+  nav button:hover{background:var(--fondo)}
+  nav button.activo{background:var(--acento-claro);color:var(--acento);font-weight:600}
+  main{padding:22px;max-width:1150px;margin:0 auto}
+  .barra{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+  .barra input,.barra select{padding:8px 11px;border:1px solid var(--borde);
+                             border-radius:6px;font-size:13px;background:var(--panel)}
+  .barra input[type=search]{flex:1;min-width:200px}
+  .btn{background:var(--acento);color:#fff;border:none;padding:9px 16px;
+       border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
+  .btn:hover{filter:brightness(1.1)}
+  .btn.sec{background:var(--panel);color:var(--texto);border:1px solid var(--borde)}
+  .tabla-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;background:var(--panel);
+        border:1px solid var(--borde);border-radius:8px;overflow:hidden}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;
+     color:var(--suave);padding:11px 14px;border-bottom:1px solid var(--borde);font-weight:600}
+  td{padding:12px 14px;border-bottom:1px solid #f0ede8;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#faf9f7}
+  .exp{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--suave)}
+  .chip{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;
+        font-weight:600;background:var(--acento-claro);color:var(--acento);white-space:nowrap}
+  .venc{font-size:12px;color:var(--suave)}
+  .venc.pronto{color:var(--alerta);font-weight:600}
+  .venc.vencido{color:var(--peligro);font-weight:600}
+  .vacio{padding:44px;text-align:center;color:var(--suave);background:var(--panel);
+         border:1px dashed var(--borde);border-radius:8px}
+  dialog{border:none;border-radius:10px;padding:0;width:min(560px,94vw);
+         box-shadow:0 12px 40px rgba(0,0,0,.22)}
+  dialog::backdrop{background:rgba(0,0,0,.4)}
+  .dlg-cab{padding:16px 22px;border-bottom:1px solid var(--borde);font-weight:600}
+  .dlg-cuerpo{padding:20px 22px;max-height:65vh;overflow:auto}
+  .dlg-pie{padding:14px 22px;border-top:1px solid var(--borde);
+           display:flex;gap:8px;justify-content:flex-end;background:#faf9f7}
+  label{display:block;margin-bottom:14px}
+  label span{display:block;font-size:12px;color:var(--suave);margin-bottom:5px;font-weight:500}
+  label input,label select{width:100%;padding:8px 11px;
+    border:1px solid var(--borde);border-radius:6px;font:inherit;background:var(--panel)}
+  .fila{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .det dt{font-size:11px;text-transform:uppercase;letter-spacing:.5px;
+          color:var(--suave);margin-top:14px;font-weight:600}
+  .det dd{margin:3px 0 0}
+  .linea{border-left:2px solid var(--borde);padding-left:14px;margin:8px 0 0}
+  .linea li{list-style:none;font-size:13px;margin-bottom:9px;position:relative}
+  .linea li::before{content:'';position:absolute;left:-19px;top:6px;width:7px;height:7px;
+                    border-radius:50%;background:var(--acento)}
+  .linea time{color:var(--suave);font-size:11px;display:block}
+  .aviso{background:var(--acento-claro);border:1px solid #e0d2b8;color:#5d4520;
+         padding:11px 15px;border-radius:7px;font-size:12.5px;margin-bottom:18px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Sistema de Gestión Notarial</h1>
+  <span class="sub">Prototipo &middot; datos de ejemplo</span>
+  <nav>
+    <button data-vista="expedientes" class="activo">Expedientes</button>
+    <button data-vista="partes">Partes</button>
+    <button data-vista="vencimientos">Vencimientos</button>
+  </nav>
+</header>
+
+<main>
+  <div class="aviso">
+    <strong>Esto es un prototipo para discutir, no el sistema final.</strong>
+    Los datos se guardan solo en este navegador. Sirve para ponernos de acuerdo en
+    qué campos, estados y pantallas hacen falta, antes de programar en serio.
+  </div>
+  <div id="vista"></div>
+</main>
+
+<dialog id="dlg">
+  <div class="dlg-cab" id="dlgTit"></div>
+  <div class="dlg-cuerpo" id="dlgCuerpo"></div>
+  <div class="dlg-pie" id="dlgPie"></div>
+</dialog>
+
+<script>
+const ESTADOS = ["Consulta inicial","En preparación","Listo para firma","Firmado",
+                 "En inscripción","Inscripto","Cerrado"];
+const ACTOS = ["Compraventa","Donación","Poder","Sucesión","Constitución de sociedad",
+               "Hipoteca","Cesión de derechos","Acta de constatación"];
+const ROLES = ["Vendedor","Comprador","Donante","Donatario","Poderdante","Apoderado","Otro"];
+
+const hoy = () => new Date().toISOString().slice(0,10);
+const suma = d => { const f = new Date(); f.setDate(f.getDate()+d); return f.toISOString().slice(0,10); };
+
+const SEMILLA = {
+  partes: [
+    {id:"p1", tipo:"Persona física", nombre:"María Elena Suárez", doc:"DNI 24.118.902",
+     cuit:"27-24118902-4", estadoCivil:"Casada", domicilio:"Rivadavia 1240, Piso 3",
+     tel:"11 4455-7788", mail:"msuarez@ejemplo.com"},
+    {id:"p2", tipo:"Persona física", nombre:"Jorge Alberto Domínguez", doc:"DNI 18.774.331",
+     cuit:"20-18774331-9", estadoCivil:"Divorciado", domicilio:"San Martín 855",
+     tel:"11 6677-2211", mail:"jadominguez@ejemplo.com"},
+    {id:"p3", tipo:"Persona jurídica", nombre:"Constructora del Litoral S.A.",
+     doc:"—", cuit:"30-71442907-6", estadoCivil:"—", domicilio:"Av. Belgrano 2100",
+     tel:"11 5010-3300", mail:"legales@ejemplo.com"}
+  ],
+  expedientes: [
+    {id:"e1", nro:"2026-0041", acto:"Compraventa", estado:"En inscripción",
+     responsable:"Escribanía", apertura:"2026-07-14", vence:suma(9),
+     bien:"Inmueble — Matrícula 12.884/7, Partido 055",
+     partes:[{parteId:"p1", rol:"Vendedor"},{parteId:"p2", rol:"Comprador"}],
+     historial:[
+       {fecha:"2026-07-14", texto:"Apertura del expediente"},
+       {fecha:"2026-08-02", texto:"Certificados de dominio e inhibición solicitados"},
+       {fecha:"2026-08-28", texto:"Escritura firmada por las partes"},
+       {fecha:"2026-09-01", texto:"Presentado en el Registro de la Propiedad"}
+     ]},
+    {id:"e2", nro:"2026-0042", acto:"Poder", estado:"Listo para firma",
+     responsable:"Escribanía", apertura:"2026-08-20", vence:suma(2), bien:"—",
+     partes:[{parteId:"p2", rol:"Poderdante"}],
+     historial:[
+       {fecha:"2026-08-20", texto:"Apertura del expediente"},
+       {fecha:"2026-09-03", texto:"Borrador aprobado por el poderdante"}
+     ]},
+    {id:"e3", nro:"2026-0043", acto:"Constitución de sociedad", estado:"En preparación",
+     responsable:"Escribanía", apertura:"2026-09-01", vence:suma(24), bien:"—",
+     partes:[{parteId:"p3", rol:"Otro"}],
+     historial:[{fecha:"2026-09-01", texto:"Apertura del expediente"}]},
+    {id:"e4", nro:"2026-0038", acto:"Donación", estado:"Cerrado",
+     responsable:"Escribanía", apertura:"2026-05-30", vence:"",
+     bien:"Inmueble — Matrícula 09.221/3",
+     partes:[{parteId:"p1", rol:"Donante"},{parteId:"p2", rol:"Donatario"}],
+     historial:[
+       {fecha:"2026-05-30", texto:"Apertura del expediente"},
+       {fecha:"2026-06-25", texto:"Inscripción confirmada"},
+       {fecha:"2026-07-02", texto:"Testimonio entregado al donatario"}
+     ]}
+  ]
+};
+
+const CLAVE = "gestion-notarial-prototipo";
+let db;
+try { db = JSON.parse(localStorage.getItem(CLAVE)) || structuredClone(SEMILLA); }
+catch (e) { db = structuredClone(SEMILLA); }
+function guardar(){ try { localStorage.setItem(CLAVE, JSON.stringify(db)); } catch (e) {} }
+
+const parte = id => db.partes.find(p => p.id === id) || {nombre:"(sin datos)"};
+const esc = s => String(s ?? "").replace(/[&<>"]/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const dias = f => f ? Math.round((new Date(f) - new Date(hoy())) / 86400000) : null;
+
+function marcaVenc(f){
+  const d = dias(f);
+  if (d === null) return "<span class=\"venc\">—</span>";
+  if (d < 0)   return "<span class=\"venc vencido\">vencido hace " + (-d) + " d</span>";
+  if (d <= 7)  return "<span class=\"venc pronto\">en " + d + " d</span>";
+  return "<span class=\"venc\">en " + d + " d</span>";
+}
+
+let filtro = {texto:"", estado:""};
+let vistaActual = "expedientes";
+const vista = document.getElementById("vista");
+
+function pintar(){
+  if (vistaActual === "expedientes") pintarExpedientes();
+  else if (vistaActual === "partes") pintarPartes();
+  else pintarVencimientos();
+}
+
+function pintarExpedientes(){
+  const t = filtro.texto.toLowerCase();
+  const lista = db.expedientes.filter(e => {
+    const coincide = !t || e.nro.toLowerCase().includes(t) || e.acto.toLowerCase().includes(t) ||
+      e.partes.some(x => parte(x.parteId).nombre.toLowerCase().includes(t));
+    return coincide && (!filtro.estado || e.estado === filtro.estado);
+  });
+
+  vista.innerHTML =
+    "<div class=\"barra\">" +
+      "<input type=\"search\" id=\"busq\" placeholder=\"Buscar por número, acto o parte…\" value=\"" + esc(filtro.texto) + "\">" +
+      "<select id=\"filtroEstado\"><option value=\"\">Todos los estados</option>" +
+        ESTADOS.map(s => "<option" + (s === filtro.estado ? " selected" : "") + ">" + s + "</option>").join("") +
+      "</select>" +
+      "<button class=\"btn\" id=\"nuevoExp\">Nuevo expediente</button>" +
+    "</div>" +
+    (lista.length
+      ? "<div class=\"tabla-scroll\"><table><thead><tr><th>Expediente</th><th>Acto</th>" +
+        "<th>Partes</th><th>Estado</th><th>Vencimiento</th></tr></thead><tbody>" +
+        lista.map(e =>
+          "<tr data-id=\"" + e.id + "\">" +
+            "<td class=\"exp\">" + esc(e.nro) + "</td>" +
+            "<td>" + esc(e.acto) + "</td>" +
+            "<td>" + (e.partes.map(x => esc(parte(x.parteId).nombre)).join("<br>") || "—") + "</td>" +
+            "<td><span class=\"chip\">" + esc(e.estado) + "</span></td>" +
+            "<td>" + (e.estado === "Cerrado" ? "<span class=\"venc\">—</span>" : marcaVenc(e.vence)) + "</td>" +
+          "</tr>").join("") +
+        "</tbody></table></div>"
+      : "<div class=\"vacio\">No hay expedientes que coincidan con la búsqueda.</div>");
+
+  const busq = document.getElementById("busq");
+  busq.oninput = ev => {
+    filtro.texto = ev.target.value;
+    pintar();
+    const c = document.getElementById("busq");
+    c.focus();
+    c.setSelectionRange(c.value.length, c.value.length);
+  };
+  document.getElementById("filtroEstado").onchange = ev => { filtro.estado = ev.target.value; pintar(); };
+  document.getElementById("nuevoExp").onclick = formExpediente;
+  vista.querySelectorAll("tbody tr").forEach(tr => { tr.onclick = () => verExpediente(tr.dataset.id); });
+}
+
+function verExpediente(id){
+  const e = db.expedientes.find(x => x.id === id);
+  abrir("Expediente " + esc(e.nro),
+    "<dl class=\"det\">" +
+      "<dt>Tipo de acto</dt><dd>" + esc(e.acto) + "</dd>" +
+      "<dt>Estado</dt><dd><span class=\"chip\">" + esc(e.estado) + "</span></dd>" +
+      "<dt>Responsable</dt><dd>" + esc(e.responsable) + "</dd>" +
+      "<dt>Bien involucrado</dt><dd>" + (esc(e.bien) || "—") + "</dd>" +
+      "<dt>Partes intervinientes</dt><dd>" +
+        (e.partes.map(x => esc(parte(x.parteId).nombre) +
+          " <span class=\"chip\">" + esc(x.rol) + "</span>").join("<br>") || "—") + "</dd>" +
+      "<dt>Fecha de apertura</dt><dd>" + esc(e.apertura) + "</dd>" +
+      "<dt>Próximo vencimiento</dt><dd>" +
+        (e.vence ? esc(e.vence) + " — " + marcaVenc(e.vence) : "—") + "</dd>" +
+      "<dt>Historial</dt><dd><ul class=\"linea\">" +
+        e.historial.slice().reverse().map(h =>
+          "<li><time>" + esc(h.fecha) + "</time>" + esc(h.texto) + "</li>").join("") +
+      "</ul></dd>" +
+    "</dl>" +
+    "<label style=\"margin-top:20px\"><span>Cambiar estado</span><select id=\"nuevoEstado\">" +
+      ESTADOS.map(s => "<option" + (s === e.estado ? " selected" : "") + ">" + s + "</option>").join("") +
+    "</select></label>",
+    [{txt:"Cerrar", sec:true},
+     {txt:"Guardar cambio", accion:() => {
+        const ne = document.getElementById("nuevoEstado").value;
+        if (ne !== e.estado){
+          e.historial.push({fecha:hoy(), texto:"Estado: " + e.estado + " → " + ne});
+          e.estado = ne;
+          guardar();
+        }
+     }}]);
+}
+
+function formExpediente(){
+  const n = db.expedientes.length + 1;
+  abrir("Nuevo expediente",
+    "<div class=\"fila\">" +
+      "<label><span>Número</span><input id=\"f_nro\" value=\"2026-" + String(40 + n).padStart(4,"0") + "\"></label>" +
+      "<label><span>Tipo de acto</span><select id=\"f_acto\">" +
+        ACTOS.map(a => "<option>" + a + "</option>").join("") + "</select></label>" +
+    "</div>" +
+    "<label><span>Parte interviniente</span><select id=\"f_parte\">" +
+      db.partes.map(p => "<option value=\"" + p.id + "\">" + esc(p.nombre) + "</option>").join("") +
+    "</select></label>" +
+    "<label><span>Rol de esa parte</span><select id=\"f_rol\">" +
+      ROLES.map(r => "<option>" + r + "</option>").join("") + "</select></label>" +
+    "<label><span>Bien involucrado</span><input id=\"f_bien\" placeholder=\"Matrícula, dominio, etc.\"></label>" +
+    "<div class=\"fila\">" +
+      "<label><span>Responsable</span><input id=\"f_resp\" value=\"Escribanía\"></label>" +
+      "<label><span>Próximo vencimiento</span><input type=\"date\" id=\"f_vence\" value=\"" + suma(30) + "\"></label>" +
+    "</div>",
+    [{txt:"Cancelar", sec:true},
+     {txt:"Crear expediente", accion:() => {
+        const v = i => document.getElementById(i).value;
+        db.expedientes.unshift({
+          id:"e" + Date.now(), nro:v("f_nro"), acto:v("f_acto"), estado:ESTADOS[0],
+          responsable:v("f_resp"), apertura:hoy(), vence:v("f_vence"), bien:v("f_bien"),
+          partes:[{parteId:v("f_parte"), rol:v("f_rol")}],
+          historial:[{fecha:hoy(), texto:"Apertura del expediente"}]
+        });
+        guardar();
+     }}]);
+}
+
+function pintarPartes(){
+  vista.innerHTML =
+    "<div class=\"barra\"><button class=\"btn\" id=\"nuevaParte\">Nueva parte</button></div>" +
+    "<div class=\"tabla-scroll\"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Documento</th>" +
+    "<th>CUIT / CUIL</th><th>Contacto</th><th>Expedientes</th></tr></thead><tbody>" +
+    db.partes.map(p => {
+      const cant = db.expedientes.filter(e => e.partes.some(x => x.parteId === p.id)).length;
+      return "<tr>" +
+        "<td><strong>" + esc(p.nombre) + "</strong><br><span class=\"venc\">" + esc(p.domicilio) + "</span></td>" +
+        "<td>" + esc(p.tipo) + "</td><td>" + esc(p.doc) + "</td><td>" + esc(p.cuit) + "</td>" +
+        "<td>" + esc(p.tel) + "<br><span class=\"venc\">" + esc(p.mail) + "</span></td>" +
+        "<td>" + cant + "</td></tr>";
+    }).join("") +
+    "</tbody></table></div>";
+
+  document.getElementById("nuevaParte").onclick = () => abrir("Nueva parte",
+    "<label><span>Nombre / Razón social</span><input id=\"p_nombre\"></label>" +
+    "<div class=\"fila\">" +
+      "<label><span>Tipo</span><select id=\"p_tipo\"><option>Persona física</option>" +
+        "<option>Persona jurídica</option></select></label>" +
+      "<label><span>Documento</span><input id=\"p_doc\" placeholder=\"DNI 00.000.000\"></label>" +
+    "</div>" +
+    "<div class=\"fila\">" +
+      "<label><span>CUIT / CUIL</span><input id=\"p_cuit\"></label>" +
+      "<label><span>Estado civil</span><input id=\"p_ec\"></label>" +
+    "</div>" +
+    "<label><span>Domicilio</span><input id=\"p_dom\"></label>" +
+    "<div class=\"fila\">" +
+      "<label><span>Teléfono</span><input id=\"p_tel\"></label>" +
+      "<label><span>Correo</span><input id=\"p_mail\"></label>" +
+    "</div>",
+    [{txt:"Cancelar", sec:true},
+     {txt:"Crear parte", accion:() => {
+        const v = i => document.getElementById(i).value;
+        if (!v("p_nombre").trim()) return;
+        db.partes.push({id:"p" + Date.now(), nombre:v("p_nombre"), tipo:v("p_tipo"),
+          doc:v("p_doc"), cuit:v("p_cuit"), estadoCivil:v("p_ec"),
+          domicilio:v("p_dom"), tel:v("p_tel"), mail:v("p_mail")});
+        guardar();
+     }}]);
+}
+
+function pintarVencimientos(){
+  const lista = db.expedientes
+    .filter(e => e.vence && e.estado !== "Cerrado")
+    .sort((a,b) => a.vence.localeCompare(b.vence));
+
+  vista.innerHTML = lista.length
+    ? "<div class=\"tabla-scroll\"><table><thead><tr><th>Vence</th><th>Expediente</th>" +
+      "<th>Acto</th><th>Estado</th><th>Responsable</th></tr></thead><tbody>" +
+      lista.map(e => "<tr data-id=\"" + e.id + "\">" +
+        "<td>" + esc(e.vence) + "<br>" + marcaVenc(e.vence) + "</td>" +
+        "<td class=\"exp\">" + esc(e.nro) + "</td>" +
+        "<td>" + esc(e.acto) + "</td>" +
+        "<td><span class=\"chip\">" + esc(e.estado) + "</span></td>" +
+        "<td>" + esc(e.responsable) + "</td></tr>").join("") +
+      "</tbody></table></div>"
+    : "<div class=\"vacio\">No hay vencimientos pendientes.</div>";
+
+  vista.querySelectorAll("tbody tr").forEach(tr => { tr.onclick = () => verExpediente(tr.dataset.id); });
+}
+
+const dlg = document.getElementById("dlg");
+function abrir(titulo, cuerpo, botones){
+  document.getElementById("dlgTit").textContent = titulo;
+  document.getElementById("dlgCuerpo").innerHTML = cuerpo;
+  const pie = document.getElementById("dlgPie");
+  pie.innerHTML = "";
+  botones.forEach(b => {
+    const el = document.createElement("button");
+    el.className = "btn" + (b.sec ? " sec" : "");
+    el.textContent = b.txt;
+    el.onclick = () => { if (b.accion) b.accion(); dlg.close(); pintar(); };
+    pie.appendChild(el);
+  });
+  dlg.showModal();
+}
+
+document.querySelectorAll("nav button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll("nav button").forEach(x => x.classList.remove("activo"));
+    b.classList.add("activo");
+    vistaActual = b.dataset.vista;
+    pintar();
+  };
+});
+
+pintar();
+</script>
+</body>
+</html>
