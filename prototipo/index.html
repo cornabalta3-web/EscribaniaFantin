@@ -3,95 +3,235 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sistema de Gestión Notarial — Prototipo</title>
+<title>Sistema de Gestión Notarial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-  :root{
-    --fondo:#f5f4f1; --panel:#fff; --borde:#ddd9d2; --texto:#25211c;
-    --suave:#6f6559; --acento:#7a5c2e; --acento-claro:#f0e7d8;
-    --alerta:#a3521a; --peligro:#9b3232;
+/* ============================================================
+   TOKENS — todos los colores del sistema salen de acá.
+   Cambiar un color acá lo cambia en todo el sistema.
+   ============================================================ */
+:root{
+  --ground:#eceef1; --panel:#fff; --panel-2:#f6f7f9;
+  --line:#dde1e6; --line-fuerte:#c3cad2;
+  --ink:#151a20; --ink-2:#5a6570; --ink-3:#8a939c;
+  --acento:#24406e; --acento-suave:#e3eaf5; --acento-borde:#c2d2ea;
+  --ok:#1c6349; --ok-suave:#e0efe8;
+  --alerta:#87550f; --alerta-suave:#f6ecd8;
+  --critico:#8d2f2b; --critico-suave:#f8e4e3;
+  --sombra:0 1px 2px rgba(21,26,32,.07);
+  --radio:7px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#131619; --panel:#1a1e22; --panel-2:#21262b;
+    --line:#2b3137; --line-fuerte:#3d454d;
+    --ink:#e5e9ed; --ink-2:#98a2ab; --ink-3:#6d777f;
+    --acento:#84a6dd; --acento-suave:#1f2c40; --acento-borde:#31425c;
+    --ok:#6ec49c; --ok-suave:#183227;
+    --alerta:#d4a25d; --alerta-suave:#332815;
+    --critico:#e08d88; --critico-suave:#38201f;
+    --sombra:0 1px 2px rgba(0,0,0,.45);
   }
-  *{box-sizing:border-box}
-  body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;
-       background:var(--fondo);color:var(--texto)}
-  header{background:var(--panel);border-bottom:1px solid var(--borde);
-         padding:14px 22px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-  header h1{font-size:17px;margin:0;font-weight:600}
-  header .sub{color:var(--suave);font-size:12px}
-  nav{margin-left:auto;display:flex;gap:4px}
-  nav button{background:none;border:1px solid transparent;padding:7px 14px;
-             border-radius:6px;cursor:pointer;font-size:13px;color:var(--suave)}
-  nav button:hover{background:var(--fondo)}
-  nav button.activo{background:var(--acento-claro);color:var(--acento);font-weight:600}
-  main{padding:22px;max-width:1150px;margin:0 auto}
-  .barra{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
-  .barra input,.barra select{padding:8px 11px;border:1px solid var(--borde);
-                             border-radius:6px;font-size:13px;background:var(--panel)}
-  .barra input[type=search]{flex:1;min-width:200px}
-  .btn{background:var(--acento);color:#fff;border:none;padding:9px 16px;
-       border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
-  .btn:hover{filter:brightness(1.1)}
-  .btn.sec{background:var(--panel);color:var(--texto);border:1px solid var(--borde)}
-  .tabla-scroll{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;background:var(--panel);
-        border:1px solid var(--borde);border-radius:8px;overflow:hidden}
-  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;
-     color:var(--suave);padding:11px 14px;border-bottom:1px solid var(--borde);font-weight:600}
-  td{padding:12px 14px;border-bottom:1px solid #f0ede8;vertical-align:top}
-  tr:last-child td{border-bottom:none}
-  tbody tr{cursor:pointer}
-  tbody tr:hover{background:#faf9f7}
-  .exp{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--suave)}
-  .chip{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;
-        font-weight:600;background:var(--acento-claro);color:var(--acento);white-space:nowrap}
-  .venc{font-size:12px;color:var(--suave)}
-  .venc.pronto{color:var(--alerta);font-weight:600}
-  .venc.vencido{color:var(--peligro);font-weight:600}
-  .vacio{padding:44px;text-align:center;color:var(--suave);background:var(--panel);
-         border:1px dashed var(--borde);border-radius:8px}
-  dialog{border:none;border-radius:10px;padding:0;width:min(560px,94vw);
-         box-shadow:0 12px 40px rgba(0,0,0,.22)}
-  dialog::backdrop{background:rgba(0,0,0,.4)}
-  .dlg-cab{padding:16px 22px;border-bottom:1px solid var(--borde);font-weight:600}
-  .dlg-cuerpo{padding:20px 22px;max-height:65vh;overflow:auto}
-  .dlg-pie{padding:14px 22px;border-top:1px solid var(--borde);
-           display:flex;gap:8px;justify-content:flex-end;background:#faf9f7}
-  label{display:block;margin-bottom:14px}
-  label span{display:block;font-size:12px;color:var(--suave);margin-bottom:5px;font-weight:500}
-  label input,label select{width:100%;padding:8px 11px;
-    border:1px solid var(--borde);border-radius:6px;font:inherit;background:var(--panel)}
-  .fila{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .det dt{font-size:11px;text-transform:uppercase;letter-spacing:.5px;
-          color:var(--suave);margin-top:14px;font-weight:600}
-  .det dd{margin:3px 0 0}
-  .linea{border-left:2px solid var(--borde);padding-left:14px;margin:8px 0 0}
-  .linea li{list-style:none;font-size:13px;margin-bottom:9px;position:relative}
-  .linea li::before{content:'';position:absolute;left:-19px;top:6px;width:7px;height:7px;
-                    border-radius:50%;background:var(--acento)}
-  .linea time{color:var(--suave);font-size:11px;display:block}
-  .aviso{background:var(--acento-claro);border:1px solid #e0d2b8;color:#5d4520;
-         padding:11px 15px;border-radius:7px;font-size:12.5px;margin-bottom:18px}
+}
+:root[data-theme="dark"]{
+  --ground:#131619; --panel:#1a1e22; --panel-2:#21262b;
+  --line:#2b3137; --line-fuerte:#3d454d;
+  --ink:#e5e9ed; --ink-2:#98a2ab; --ink-3:#6d777f;
+  --acento:#84a6dd; --acento-suave:#1f2c40; --acento-borde:#31425c;
+  --ok:#6ec49c; --ok-suave:#183227;
+  --alerta:#d4a25d; --alerta-suave:#332815;
+  --critico:#e08d88; --critico-suave:#38201f;
+  --sombra:0 1px 2px rgba(0,0,0,.45);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font:15px/1.55 "Public Sans",-apple-system,Segoe UI,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:Archivo,"Public Sans",sans-serif;margin:0;text-wrap:balance}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+      font-variant-numeric:tabular-nums}
+
+/* ---------- Estructura general ---------- */
+.app{display:grid;grid-template-columns:224px 1fr;min-height:100vh}
+
+.lateral{background:var(--panel);border-right:1px solid var(--line);
+         display:flex;flex-direction:column;gap:2px;padding:18px 12px}
+.marca{padding:4px 10px 18px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.marca strong{display:block;font-family:Archivo,sans-serif;font-size:15px;
+              font-weight:700;letter-spacing:-.01em;line-height:1.25}
+.marca span{font-size:11.5px;color:var(--ink-3);letter-spacing:.02em}
+
+.nav-grupo{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;
+           color:var(--ink-3);font-weight:600;padding:14px 10px 6px}
+.lateral button{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  background:none;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;
+  font:inherit;font-size:13.5px;color:var(--ink-2);
+}
+.lateral button:hover{background:var(--panel-2);color:var(--ink)}
+.lateral button.activo{background:var(--acento-suave);color:var(--acento);font-weight:600}
+.lateral button .marca-pend{margin-left:auto;font-size:9.5px;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--ink-3);border:1px solid var(--line-fuerte);
+  border-radius:3px;padding:1px 4px;font-weight:600}
+.lateral button:focus-visible,.barra button:focus-visible,
+.barra input:focus-visible,.barra select:focus-visible,
+tbody tr:focus-visible,.btn:focus-visible{outline:2px solid var(--acento);outline-offset:2px}
+
+.contenido{display:flex;flex-direction:column;min-width:0}
+.cab{background:var(--panel);border-bottom:1px solid var(--line);
+     padding:16px 26px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.cab h1{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.cab p{margin:2px 0 0;font-size:12.5px;color:var(--ink-2)}
+.cab .der{margin-left:auto;display:flex;gap:8px;align-items:center}
+main{padding:24px 26px 48px;max-width:1180px;width:100%}
+
+/* ---------- Controles ---------- */
+.btn{background:var(--acento);color:var(--panel);border:1px solid transparent;
+     padding:8px 15px;border-radius:6px;cursor:pointer;font:inherit;
+     font-size:13.5px;font-weight:600}
+.btn:hover{filter:brightness(1.12)}
+.btn.sec{background:var(--panel);color:var(--ink);border-color:var(--line-fuerte);font-weight:500}
+.btn.sec:hover{background:var(--panel-2);filter:none}
+.barra{display:flex;gap:9px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.barra input,.barra select{padding:8px 11px;border:1px solid var(--line-fuerte);
+  border-radius:6px;font:inherit;font-size:13.5px;background:var(--panel);color:var(--ink)}
+.barra input[type=search]{flex:1;min-width:210px}
+
+/* ---------- Tablas ---------- */
+.scroll-x{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radio);
+          background:var(--panel);box-shadow:var(--sombra)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+   color:var(--ink-3);padding:10px 15px;border-bottom:1px solid var(--line);
+   font-weight:600;white-space:nowrap;background:var(--panel-2)}
+td{padding:12px 15px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13.5px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--panel-2)}
+.sub{font-size:12px;color:var(--ink-3)}
+
+/* ---------- Estados y vencimientos ---------- */
+.chip{display:inline-block;padding:2.5px 9px;border-radius:99px;font-size:11.5px;
+      font-weight:600;white-space:nowrap;border:1px solid transparent}
+.chip.n{background:var(--panel-2);color:var(--ink-2);border-color:var(--line-fuerte)}
+.chip.a{background:var(--acento-suave);color:var(--acento);border-color:var(--acento-borde)}
+.chip.w{background:var(--alerta-suave);color:var(--alerta)}
+.chip.k{background:var(--ok-suave);color:var(--ok)}
+.venc{font-size:12.5px;color:var(--ink-2)}
+.venc.pronto{color:var(--alerta);font-weight:600}
+.venc.vencido{color:var(--critico);font-weight:700}
+
+/* ---------- Panel ---------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));
+       gap:12px;margin-bottom:22px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--radio);
+      padding:15px 17px;box-shadow:var(--sombra)}
+.tile .n{font-family:Archivo,sans-serif;font-size:29px;font-weight:600;
+         line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tile .t{font-size:12px;color:var(--ink-2);margin-top:3px}
+.tile.urgente .n{color:var(--critico)}
+.tile.atencion .n{color:var(--alerta)}
+
+.grilla{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.grilla{grid-template-columns:1fr}.app{grid-template-columns:1fr}
+  .lateral{flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--line)}
+  .marca,.nav-grupo{width:100%;border:none;padding-bottom:8px;margin:0}}
+
+.bloque{background:var(--panel);border:1px solid var(--line);
+        border-radius:var(--radio);box-shadow:var(--sombra)}
+.bloque h2{font-size:13px;font-weight:600;padding:13px 17px;
+           border-bottom:1px solid var(--line);letter-spacing:.01em}
+.bloque .cuerpo{padding:6px 17px 14px}
+.reng{display:flex;gap:12px;align-items:baseline;padding:9px 0;
+       border-bottom:1px solid var(--line);font-size:13.5px}
+.reng:last-child{border-bottom:none}
+.reng .fin{margin-left:auto;text-align:right;white-space:nowrap}
+
+.estado-lista button{display:flex;width:100%;align-items:center;gap:10px;
+  background:none;border:none;border-bottom:1px solid var(--line);
+  padding:9px 0;font:inherit;font-size:13.5px;color:var(--ink);cursor:pointer;text-align:left}
+.estado-lista button:last-child{border-bottom:none}
+.estado-lista button:hover{color:var(--acento)}
+.estado-lista .c{margin-left:auto;font-family:"IBM Plex Mono",monospace;
+                 font-variant-numeric:tabular-nums;color:var(--ink-2)}
+
+/* ---------- Módulos pendientes ---------- */
+.pendiente{background:var(--panel);border:1px dashed var(--line-fuerte);
+           border-radius:var(--radio);padding:26px 28px;max-width:640px}
+.pendiente .et{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;
+               color:var(--ink-3);font-weight:600}
+.pendiente h2{font-size:17px;font-weight:600;margin:7px 0 10px}
+.pendiente p{margin:0 0 16px;color:var(--ink-2);font-size:14px;max-width:60ch}
+.pendiente ul{margin:0;padding-left:19px;color:var(--ink-2);font-size:13.5px}
+.pendiente li{margin-bottom:6px}
+.pendiente li::marker{color:var(--acento)}
+
+/* ---------- Ficha / diálogo ---------- */
+dialog{border:none;border-radius:9px;padding:0;width:min(580px,94vw);
+       background:var(--panel);color:var(--ink);box-shadow:0 16px 48px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(10,14,18,.55)}
+.dlg-cab{padding:16px 22px;border-bottom:1px solid var(--line);
+         font-family:Archivo,sans-serif;font-weight:600;font-size:15.5px}
+.dlg-cuerpo{padding:18px 22px;max-height:64vh;overflow:auto}
+.dlg-pie{padding:13px 22px;border-top:1px solid var(--line);display:flex;
+         gap:8px;justify-content:flex-end;background:var(--panel-2)}
+.det{margin:0;display:grid;grid-template-columns:130px 1fr;gap:0 16px}
+.det dt{font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+        color:var(--ink-3);font-weight:600;padding:8px 0;border-top:1px solid var(--line)}
+.det dd{margin:0;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+.det dt:first-of-type,.det dt:first-of-type + dd{border-top:none}
+.linea{list-style:none;margin:0;padding:0 0 0 16px;border-left:2px solid var(--line)}
+.linea li{font-size:13px;margin-bottom:10px;position:relative}
+.linea li::before{content:"";position:absolute;left:-21px;top:6px;width:6px;height:6px;
+                  border-radius:50%;background:var(--acento);
+                  box-shadow:0 0 0 3px var(--panel)}
+.linea time{display:block;color:var(--ink-3);font-size:11px;
+            font-family:"IBM Plex Mono",monospace}
+label{display:block;margin-bottom:13px}
+label span{display:block;font-size:11.5px;color:var(--ink-2);
+           margin-bottom:5px;font-weight:500}
+label input,label select{width:100%;padding:8px 11px;border:1px solid var(--line-fuerte);
+  border-radius:6px;font:inherit;font-size:13.5px;background:var(--panel);color:var(--ink)}
+.fila{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.vacio{padding:44px;text-align:center;color:var(--ink-3);background:var(--panel);
+       border:1px dashed var(--line-fuerte);border-radius:var(--radio);font-size:13.5px}
+.aviso{background:var(--acento-suave);border:1px solid var(--acento-borde);
+       color:var(--acento);padding:10px 15px;border-radius:6px;
+       font-size:12.5px;margin-bottom:20px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Sistema de Gestión Notarial</h1>
-  <span class="sub">Prototipo &middot; datos de ejemplo</span>
-  <nav>
-    <button data-vista="expedientes" class="activo">Expedientes</button>
-    <button data-vista="partes">Partes</button>
-    <button data-vista="vencimientos">Vencimientos</button>
-  </nav>
-</header>
+<div class="app">
+  <aside class="lateral">
+    <div class="marca">
+      <strong>Gestión Notarial</strong>
+      <span>Escribanía Fantin</span>
+    </div>
+    <div class="nav-grupo">Trabajo diario</div>
+    <div id="nav1"></div>
+    <div class="nav-grupo">Registro</div>
+    <div id="nav2"></div>
+  </aside>
 
-<main>
-  <div class="aviso">
-    <strong>Esto es un prototipo para discutir, no el sistema final.</strong>
-    Los datos se guardan solo en este navegador. Sirve para ponernos de acuerdo en
-    qué campos, estados y pantallas hacen falta, antes de programar en serio.
+  <div class="contenido">
+    <header class="cab">
+      <div>
+        <h1 id="tituloMod"></h1>
+        <p id="bajadaMod"></p>
+      </div>
+      <div class="der" id="accionMod"></div>
+    </header>
+    <main id="vista"></main>
   </div>
-  <div id="vista"></div>
-</main>
+</div>
 
 <dialog id="dlg">
   <div class="dlg-cab" id="dlgTit"></div>
@@ -100,189 +240,351 @@
 </dialog>
 
 <script>
+/* ============================================================
+   1. DEFINICIONES DEL NEGOCIO
+   ============================================================ */
 const ESTADOS = ["Consulta inicial","En preparación","Listo para firma","Firmado",
                  "En inscripción","Inscripto","Cerrado"];
+
+// Color de cada estado: n=neutro, w=requiere acción, a=en curso, k=terminado
+const TONO_ESTADO = {
+  "Consulta inicial":"n", "En preparación":"n", "Listo para firma":"w",
+  "Firmado":"a", "En inscripción":"a", "Inscripto":"k", "Cerrado":"k"
+};
+
 const ACTOS = ["Compraventa","Donación","Poder","Sucesión","Constitución de sociedad",
                "Hipoteca","Cesión de derechos","Acta de constatación"];
-const ROLES = ["Vendedor","Comprador","Donante","Donatario","Poderdante","Apoderado","Otro"];
+const ROLES = ["Vendedor","Comprador","Donante","Donatario","Poderdante",
+               "Apoderado","Otorgante","Otro"];
 
+const MODULOS = [
+  {id:"panel",        grupo:1, nom:"Panel",         tit:"Panel",
+   baj:"Cómo viene el estudio hoy."},
+  {id:"expedientes",  grupo:1, nom:"Expedientes",   tit:"Expedientes",
+   baj:"Todos los trámites, su estado y quién los tiene."},
+  {id:"partes",       grupo:1, nom:"Partes",        tit:"Partes intervinientes",
+   baj:"Padrón único de personas físicas y jurídicas."},
+  {id:"vencimientos", grupo:1, nom:"Vencimientos",  tit:"Agenda y vencimientos",
+   baj:"Lo que vence primero, arriba."},
+  {id:"documentos",   grupo:2, nom:"Documentos",    tit:"Documentos", pendiente:true,
+   baj:"Archivos digitalizados de cada expediente."},
+  {id:"protocolo",    grupo:2, nom:"Protocolo",     tit:"Protocolo", pendiente:true,
+   baj:"Registro de escrituras, numeración y folios."},
+  {id:"reportes",     grupo:2, nom:"Reportes",      tit:"Reportes", pendiente:true,
+   baj:"Actividad del estudio y estadísticas."}
+];
+
+/* ============================================================
+   2. DATOS DE EJEMPLO
+   ============================================================ */
 const hoy = () => new Date().toISOString().slice(0,10);
-const suma = d => { const f = new Date(); f.setDate(f.getDate()+d); return f.toISOString().slice(0,10); };
+const suma = d => { const f=new Date(); f.setDate(f.getDate()+d); return f.toISOString().slice(0,10); };
 
 const SEMILLA = {
-  partes: [
-    {id:"p1", tipo:"Persona física", nombre:"María Elena Suárez", doc:"DNI 24.118.902",
-     cuit:"27-24118902-4", estadoCivil:"Casada", domicilio:"Rivadavia 1240, Piso 3",
-     tel:"11 4455-7788", mail:"msuarez@ejemplo.com"},
-    {id:"p2", tipo:"Persona física", nombre:"Jorge Alberto Domínguez", doc:"DNI 18.774.331",
-     cuit:"20-18774331-9", estadoCivil:"Divorciado", domicilio:"San Martín 855",
-     tel:"11 6677-2211", mail:"jadominguez@ejemplo.com"},
-    {id:"p3", tipo:"Persona jurídica", nombre:"Constructora del Litoral S.A.",
-     doc:"—", cuit:"30-71442907-6", estadoCivil:"—", domicilio:"Av. Belgrano 2100",
-     tel:"11 5010-3300", mail:"legales@ejemplo.com"}
+  partes:[
+    {id:"p1",tipo:"Persona física",nombre:"María Elena Suárez",doc:"DNI 24.118.902",
+     cuit:"27-24118902-4",estadoCivil:"Casada",domicilio:"Rivadavia 1240, Piso 3",
+     tel:"11 4455-7788",mail:"msuarez@ejemplo.com"},
+    {id:"p2",tipo:"Persona física",nombre:"Jorge Alberto Domínguez",doc:"DNI 18.774.331",
+     cuit:"20-18774331-9",estadoCivil:"Divorciado",domicilio:"San Martín 855",
+     tel:"11 6677-2211",mail:"jadominguez@ejemplo.com"},
+    {id:"p3",tipo:"Persona jurídica",nombre:"Constructora del Litoral S.A.",
+     doc:"—",cuit:"30-71442907-6",estadoCivil:"—",domicilio:"Av. Belgrano 2100",
+     tel:"11 5010-3300",mail:"legales@ejemplo.com"},
+    {id:"p4",tipo:"Persona física",nombre:"Ana Lucía Ferreyra",doc:"DNI 31.204.667",
+     cuit:"27-31204667-1",estadoCivil:"Soltera",domicilio:"Mitre 470, Piso 8 B",
+     tel:"11 3322-9090",mail:"alferreyra@ejemplo.com"}
   ],
-  expedientes: [
-    {id:"e1", nro:"2026-0041", acto:"Compraventa", estado:"En inscripción",
-     responsable:"Escribanía", apertura:"2026-07-14", vence:suma(9),
+  expedientes:[
+    {id:"e1",nro:"2026-0041",acto:"Compraventa",estado:"En inscripción",
+     responsable:"Esc. Fantin",apertura:"2026-07-14",vence:suma(9),
      bien:"Inmueble — Matrícula 12.884/7, Partido 055",
-     partes:[{parteId:"p1", rol:"Vendedor"},{parteId:"p2", rol:"Comprador"}],
+     partes:[{parteId:"p1",rol:"Vendedor"},{parteId:"p2",rol:"Comprador"}],
      historial:[
-       {fecha:"2026-07-14", texto:"Apertura del expediente"},
-       {fecha:"2026-08-02", texto:"Certificados de dominio e inhibición solicitados"},
-       {fecha:"2026-08-28", texto:"Escritura firmada por las partes"},
-       {fecha:"2026-09-01", texto:"Presentado en el Registro de la Propiedad"}
-     ]},
-    {id:"e2", nro:"2026-0042", acto:"Poder", estado:"Listo para firma",
-     responsable:"Escribanía", apertura:"2026-08-20", vence:suma(2), bien:"—",
-     partes:[{parteId:"p2", rol:"Poderdante"}],
+       {fecha:"2026-07-14",texto:"Apertura del expediente"},
+       {fecha:"2026-08-02",texto:"Certificados de dominio e inhibición solicitados"},
+       {fecha:"2026-08-28",texto:"Escritura firmada por las partes"},
+       {fecha:"2026-09-01",texto:"Presentado en el Registro de la Propiedad"}]},
+    {id:"e2",nro:"2026-0042",acto:"Poder",estado:"Listo para firma",
+     responsable:"Esc. Fantin",apertura:"2026-08-20",vence:suma(2),bien:"—",
+     partes:[{parteId:"p2",rol:"Poderdante"}],
      historial:[
-       {fecha:"2026-08-20", texto:"Apertura del expediente"},
-       {fecha:"2026-09-03", texto:"Borrador aprobado por el poderdante"}
-     ]},
-    {id:"e3", nro:"2026-0043", acto:"Constitución de sociedad", estado:"En preparación",
-     responsable:"Escribanía", apertura:"2026-09-01", vence:suma(24), bien:"—",
-     partes:[{parteId:"p3", rol:"Otro"}],
-     historial:[{fecha:"2026-09-01", texto:"Apertura del expediente"}]},
-    {id:"e4", nro:"2026-0038", acto:"Donación", estado:"Cerrado",
-     responsable:"Escribanía", apertura:"2026-05-30", vence:"",
+       {fecha:"2026-08-20",texto:"Apertura del expediente"},
+       {fecha:"2026-09-03",texto:"Borrador aprobado por el poderdante"}]},
+    {id:"e3",nro:"2026-0043",acto:"Constitución de sociedad",estado:"En preparación",
+     responsable:"Esc. Fantin",apertura:"2026-09-01",vence:suma(24),bien:"—",
+     partes:[{parteId:"p3",rol:"Otorgante"}],
+     historial:[{fecha:"2026-09-01",texto:"Apertura del expediente"}]},
+    {id:"e5",nro:"2026-0044",acto:"Hipoteca",estado:"Listo para firma",
+     responsable:"Esc. Fantin",apertura:"2026-08-11",vence:suma(-3),
+     bien:"Inmueble — Matrícula 21.007/2, Partido 021",
+     partes:[{parteId:"p4",rol:"Otorgante"},{parteId:"p3",rol:"Otro"}],
+     historial:[
+       {fecha:"2026-08-11",texto:"Apertura del expediente"},
+       {fecha:"2026-08-30",texto:"Tasación recibida"}]},
+    {id:"e4",nro:"2026-0038",acto:"Donación",estado:"Cerrado",
+     responsable:"Esc. Fantin",apertura:"2026-05-30",vence:"",
      bien:"Inmueble — Matrícula 09.221/3",
-     partes:[{parteId:"p1", rol:"Donante"},{parteId:"p2", rol:"Donatario"}],
+     partes:[{parteId:"p1",rol:"Donante"},{parteId:"p2",rol:"Donatario"}],
      historial:[
-       {fecha:"2026-05-30", texto:"Apertura del expediente"},
-       {fecha:"2026-06-25", texto:"Inscripción confirmada"},
-       {fecha:"2026-07-02", texto:"Testimonio entregado al donatario"}
-     ]}
+       {fecha:"2026-05-30",texto:"Apertura del expediente"},
+       {fecha:"2026-06-25",texto:"Inscripción confirmada"},
+       {fecha:"2026-07-02",texto:"Testimonio entregado al donatario"}]}
   ]
 };
 
-const CLAVE = "gestion-notarial-prototipo";
+const CLAVE = "gestion-notarial-v2";
 let db;
 try { db = JSON.parse(localStorage.getItem(CLAVE)) || structuredClone(SEMILLA); }
-catch (e) { db = structuredClone(SEMILLA); }
-function guardar(){ try { localStorage.setItem(CLAVE, JSON.stringify(db)); } catch (e) {} }
+catch(e){ db = structuredClone(SEMILLA); }
+function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify(db)); }catch(e){} }
 
+/* ============================================================
+   3. UTILIDADES
+   ============================================================ */
 const parte = id => db.partes.find(p => p.id === id) || {nombre:"(sin datos)"};
 const esc = s => String(s ?? "").replace(/[&<>"]/g,
-  c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
-const dias = f => f ? Math.round((new Date(f) - new Date(hoy())) / 86400000) : null;
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dias = f => f ? Math.round((new Date(f) - new Date(hoy()))/86400000) : null;
+const activos = () => db.expedientes.filter(e => e.estado !== "Cerrado");
+const chipEstado = s => `<span class="chip ${TONO_ESTADO[s]||"n"}">${esc(s)}</span>`;
 
 function marcaVenc(f){
   const d = dias(f);
-  if (d === null) return "<span class=\"venc\">—</span>";
-  if (d < 0)   return "<span class=\"venc vencido\">vencido hace " + (-d) + " d</span>";
-  if (d <= 7)  return "<span class=\"venc pronto\">en " + d + " d</span>";
-  return "<span class=\"venc\">en " + d + " d</span>";
+  if (d === null) return `<span class="venc">—</span>`;
+  if (d < 0)  return `<span class="venc vencido">vencido hace ${-d} d</span>`;
+  if (d === 0) return `<span class="venc pronto">vence hoy</span>`;
+  if (d <= 7) return `<span class="venc pronto">en ${d} d</span>`;
+  return `<span class="venc">en ${d} d</span>`;
 }
 
+/* ============================================================
+   4. NAVEGACIÓN
+   ============================================================ */
+let modActual = "panel";
 let filtro = {texto:"", estado:""};
-let vistaActual = "expedientes";
+
 const vista = document.getElementById("vista");
 
-function pintar(){
-  if (vistaActual === "expedientes") pintarExpedientes();
-  else if (vistaActual === "partes") pintarPartes();
-  else pintarVencimientos();
+function pintarNav(){
+  [1,2].forEach(g => {
+    document.getElementById("nav"+g).innerHTML = MODULOS
+      .filter(m => m.grupo === g)
+      .map(m => `<button data-mod="${m.id}"${m.id===modActual?' class="activo"':""}>
+          ${esc(m.nom)}${m.pendiente?'<span class="marca-pend">falta</span>':""}
+        </button>`).join("");
+  });
+  document.querySelectorAll(".lateral button[data-mod]").forEach(b => {
+    b.onclick = () => ir(b.dataset.mod);
+  });
 }
 
-function pintarExpedientes(){
+function ir(id, opciones){
+  modActual = id;
+  if (opciones && opciones.estado !== undefined){ filtro.estado = opciones.estado; filtro.texto = ""; }
+  pintarNav();
+  const m = MODULOS.find(x => x.id === id);
+  document.getElementById("tituloMod").textContent = m.tit;
+  document.getElementById("bajadaMod").textContent = m.baj;
+  document.getElementById("accionMod").innerHTML = "";
+  window.scrollTo(0,0);
+  ({panel:vPanel, expedientes:vExpedientes, partes:vPartes,
+    vencimientos:vVencimientos}[id] || (() => vPendiente(m)))();
+}
+
+function accion(txt, fn){
+  const b = document.createElement("button");
+  b.className = "btn"; b.textContent = txt; b.onclick = fn;
+  document.getElementById("accionMod").appendChild(b);
+}
+
+/* ============================================================
+   5. MÓDULO: PANEL
+   ============================================================ */
+function vPanel(){
+  const act = activos();
+  const porVencer = act.filter(e => e.vence && dias(e.vence) >= 0 && dias(e.vence) <= 7).length;
+  const vencidos  = act.filter(e => e.vence && dias(e.vence) < 0).length;
+  const firma     = act.filter(e => e.estado === "Listo para firma").length;
+
+  const proximos = act.filter(e => e.vence)
+    .sort((a,b) => a.vence.localeCompare(b.vence)).slice(0,5);
+
+  const movs = db.expedientes.flatMap(e =>
+      e.historial.map(h => ({...h, nro:e.nro, id:e.id})))
+    .sort((a,b) => b.fecha.localeCompare(a.fecha)).slice(0,6);
+
+  vista.innerHTML = `
+    <div class="aviso">Prototipo con datos de ejemplo. Sirve para acordar pantallas
+      y campos — no cargar datos reales de clientes.</div>
+
+    <div class="tiles">
+      <div class="tile"><div class="n">${act.length}</div>
+        <div class="t">Expedientes activos</div></div>
+      <div class="tile ${firma?"atencion":""}"><div class="n">${firma}</div>
+        <div class="t">Listos para firma</div></div>
+      <div class="tile ${porVencer?"atencion":""}"><div class="n">${porVencer}</div>
+        <div class="t">Vencen en 7 días</div></div>
+      <div class="tile ${vencidos?"urgente":""}"><div class="n">${vencidos}</div>
+        <div class="t">Vencidos</div></div>
+    </div>
+
+    <div class="grilla">
+      <div class="bloque">
+        <h2>Próximos vencimientos</h2>
+        <div class="cuerpo">
+          ${proximos.length ? proximos.map(e => `
+            <div class="reng">
+              <span class="mono">${esc(e.nro)}</span>
+              <span>${esc(e.acto)}</span>
+              <span class="fin">${marcaVenc(e.vence)}<br>
+                <span class="sub">${esc(e.vence)}</span></span>
+            </div>`).join("")
+            : `<p class="sub" style="padding:12px 0">Nada por vencer.</p>`}
+        </div>
+      </div>
+
+      <div class="bloque">
+        <h2>Expedientes por estado</h2>
+        <div class="cuerpo estado-lista">
+          ${ESTADOS.map(s => {
+            const c = db.expedientes.filter(e => e.estado === s).length;
+            return `<button data-estado="${esc(s)}">
+                ${chipEstado(s)}<span class="c">${c}</span></button>`;
+          }).join("")}
+        </div>
+      </div>
+
+      <div class="bloque" style="grid-column:1/-1">
+        <h2>Actividad reciente</h2>
+        <div class="cuerpo">
+          ${movs.map(m => `
+            <div class="reng">
+              <span class="mono sub">${esc(m.fecha)}</span>
+              <span class="mono">${esc(m.nro)}</span>
+              <span>${esc(m.texto)}</span>
+            </div>`).join("")}
+        </div>
+      </div>
+    </div>`;
+
+  vista.querySelectorAll("[data-estado]").forEach(b => {
+    b.onclick = () => ir("expedientes", {estado: b.dataset.estado});
+  });
+}
+
+/* ============================================================
+   6. MÓDULO: EXPEDIENTES
+   ============================================================ */
+function vExpedientes(){
+  accion("Nuevo expediente", formExpediente);
   const t = filtro.texto.toLowerCase();
   const lista = db.expedientes.filter(e => {
-    const coincide = !t || e.nro.toLowerCase().includes(t) || e.acto.toLowerCase().includes(t) ||
+    const ok = !t || e.nro.toLowerCase().includes(t) || e.acto.toLowerCase().includes(t) ||
       e.partes.some(x => parte(x.parteId).nombre.toLowerCase().includes(t));
-    return coincide && (!filtro.estado || e.estado === filtro.estado);
+    return ok && (!filtro.estado || e.estado === filtro.estado);
   });
 
-  vista.innerHTML =
-    "<div class=\"barra\">" +
-      "<input type=\"search\" id=\"busq\" placeholder=\"Buscar por número, acto o parte…\" value=\"" + esc(filtro.texto) + "\">" +
-      "<select id=\"filtroEstado\"><option value=\"\">Todos los estados</option>" +
-        ESTADOS.map(s => "<option" + (s === filtro.estado ? " selected" : "") + ">" + s + "</option>").join("") +
-      "</select>" +
-      "<button class=\"btn\" id=\"nuevoExp\">Nuevo expediente</button>" +
-    "</div>" +
-    (lista.length
-      ? "<div class=\"tabla-scroll\"><table><thead><tr><th>Expediente</th><th>Acto</th>" +
-        "<th>Partes</th><th>Estado</th><th>Vencimiento</th></tr></thead><tbody>" +
-        lista.map(e =>
-          "<tr data-id=\"" + e.id + "\">" +
-            "<td class=\"exp\">" + esc(e.nro) + "</td>" +
-            "<td>" + esc(e.acto) + "</td>" +
-            "<td>" + (e.partes.map(x => esc(parte(x.parteId).nombre)).join("<br>") || "—") + "</td>" +
-            "<td><span class=\"chip\">" + esc(e.estado) + "</span></td>" +
-            "<td>" + (e.estado === "Cerrado" ? "<span class=\"venc\">—</span>" : marcaVenc(e.vence)) + "</td>" +
-          "</tr>").join("") +
-        "</tbody></table></div>"
-      : "<div class=\"vacio\">No hay expedientes que coincidan con la búsqueda.</div>");
+  vista.innerHTML = `
+    <div class="barra">
+      <input type="search" id="busq" placeholder="Buscar por número, acto o parte…"
+             value="${esc(filtro.texto)}">
+      <select id="fEstado">
+        <option value="">Todos los estados</option>
+        ${ESTADOS.map(s => `<option${s===filtro.estado?" selected":""}>${s}</option>`).join("")}
+      </select>
+      ${filtro.estado || filtro.texto
+        ? `<button class="btn sec" id="limpiar">Limpiar filtros</button>` : ""}
+    </div>
+    ${lista.length ? `<div class="scroll-x"><table>
+      <thead><tr><th>Expediente</th><th>Acto</th><th>Partes</th>
+                 <th>Estado</th><th>Vencimiento</th></tr></thead>
+      <tbody>${lista.map(e => `
+        <tr tabindex="0" data-id="${e.id}">
+          <td class="mono">${esc(e.nro)}<br><span class="sub">${esc(e.apertura)}</span></td>
+          <td>${esc(e.acto)}</td>
+          <td>${e.partes.map(x =>
+              `${esc(parte(x.parteId).nombre)} <span class="sub">· ${esc(x.rol)}</span>`
+            ).join("<br>") || "—"}</td>
+          <td>${chipEstado(e.estado)}</td>
+          <td>${e.estado==="Cerrado" ? `<span class="venc">—</span>` : marcaVenc(e.vence)}</td>
+        </tr>`).join("")}</tbody></table></div>`
+      : `<div class="vacio">No hay expedientes que coincidan con el filtro.</div>`}`;
 
   const busq = document.getElementById("busq");
   busq.oninput = ev => {
-    filtro.texto = ev.target.value;
-    pintar();
+    filtro.texto = ev.target.value; vExpedientes();
     const c = document.getElementById("busq");
-    c.focus();
-    c.setSelectionRange(c.value.length, c.value.length);
+    c.focus(); c.setSelectionRange(c.value.length, c.value.length);
   };
-  document.getElementById("filtroEstado").onchange = ev => { filtro.estado = ev.target.value; pintar(); };
-  document.getElementById("nuevoExp").onclick = formExpediente;
-  vista.querySelectorAll("tbody tr").forEach(tr => { tr.onclick = () => verExpediente(tr.dataset.id); });
+  document.getElementById("fEstado").onchange = ev => { filtro.estado = ev.target.value; vExpedientes(); };
+  const lim = document.getElementById("limpiar");
+  if (lim) lim.onclick = () => { filtro = {texto:"", estado:""}; vExpedientes(); };
+  vista.querySelectorAll("tbody tr").forEach(tr => {
+    tr.onclick = () => verExpediente(tr.dataset.id);
+    tr.onkeydown = ev => { if (ev.key === "Enter") verExpediente(tr.dataset.id); };
+  });
 }
 
 function verExpediente(id){
   const e = db.expedientes.find(x => x.id === id);
-  abrir("Expediente " + esc(e.nro),
-    "<dl class=\"det\">" +
-      "<dt>Tipo de acto</dt><dd>" + esc(e.acto) + "</dd>" +
-      "<dt>Estado</dt><dd><span class=\"chip\">" + esc(e.estado) + "</span></dd>" +
-      "<dt>Responsable</dt><dd>" + esc(e.responsable) + "</dd>" +
-      "<dt>Bien involucrado</dt><dd>" + (esc(e.bien) || "—") + "</dd>" +
-      "<dt>Partes intervinientes</dt><dd>" +
-        (e.partes.map(x => esc(parte(x.parteId).nombre) +
-          " <span class=\"chip\">" + esc(x.rol) + "</span>").join("<br>") || "—") + "</dd>" +
-      "<dt>Fecha de apertura</dt><dd>" + esc(e.apertura) + "</dd>" +
-      "<dt>Próximo vencimiento</dt><dd>" +
-        (e.vence ? esc(e.vence) + " — " + marcaVenc(e.vence) : "—") + "</dd>" +
-      "<dt>Historial</dt><dd><ul class=\"linea\">" +
-        e.historial.slice().reverse().map(h =>
-          "<li><time>" + esc(h.fecha) + "</time>" + esc(h.texto) + "</li>").join("") +
-      "</ul></dd>" +
-    "</dl>" +
-    "<label style=\"margin-top:20px\"><span>Cambiar estado</span><select id=\"nuevoEstado\">" +
-      ESTADOS.map(s => "<option" + (s === e.estado ? " selected" : "") + ">" + s + "</option>").join("") +
-    "</select></label>",
+  abrir(`Expediente ${e.nro}`, `
+    <dl class="det">
+      <dt>Tipo de acto</dt><dd>${esc(e.acto)}</dd>
+      <dt>Estado</dt><dd>${chipEstado(e.estado)}</dd>
+      <dt>Responsable</dt><dd>${esc(e.responsable)}</dd>
+      <dt>Bien</dt><dd>${esc(e.bien) || "—"}</dd>
+      <dt>Partes</dt><dd>${e.partes.map(x =>
+          `${esc(parte(x.parteId).nombre)} <span class="sub">· ${esc(x.rol)}</span>`
+        ).join("<br>") || "—"}</dd>
+      <dt>Apertura</dt><dd class="mono">${esc(e.apertura)}</dd>
+      <dt>Vencimiento</dt><dd>${e.vence
+        ? `<span class="mono">${esc(e.vence)}</span> — ${marcaVenc(e.vence)}` : "—"}</dd>
+    </dl>
+    <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+               color:var(--ink-3);margin:20px 0 10px">Historial</h3>
+    <ul class="linea">${e.historial.slice().reverse().map(h =>
+      `<li><time>${esc(h.fecha)}</time>${esc(h.texto)}</li>`).join("")}</ul>
+    <label style="margin-top:20px"><span>Cambiar estado</span>
+      <select id="nuevoEstado">${ESTADOS.map(s =>
+        `<option${s===e.estado?" selected":""}>${s}</option>`).join("")}</select></label>`,
     [{txt:"Cerrar", sec:true},
      {txt:"Guardar cambio", accion:() => {
         const ne = document.getElementById("nuevoEstado").value;
         if (ne !== e.estado){
-          e.historial.push({fecha:hoy(), texto:"Estado: " + e.estado + " → " + ne});
-          e.estado = ne;
-          guardar();
+          e.historial.push({fecha:hoy(), texto:`Estado: ${e.estado} → ${ne}`});
+          e.estado = ne; guardar();
         }
      }}]);
 }
 
 function formExpediente(){
   const n = db.expedientes.length + 1;
-  abrir("Nuevo expediente",
-    "<div class=\"fila\">" +
-      "<label><span>Número</span><input id=\"f_nro\" value=\"2026-" + String(40 + n).padStart(4,"0") + "\"></label>" +
-      "<label><span>Tipo de acto</span><select id=\"f_acto\">" +
-        ACTOS.map(a => "<option>" + a + "</option>").join("") + "</select></label>" +
-    "</div>" +
-    "<label><span>Parte interviniente</span><select id=\"f_parte\">" +
-      db.partes.map(p => "<option value=\"" + p.id + "\">" + esc(p.nombre) + "</option>").join("") +
-    "</select></label>" +
-    "<label><span>Rol de esa parte</span><select id=\"f_rol\">" +
-      ROLES.map(r => "<option>" + r + "</option>").join("") + "</select></label>" +
-    "<label><span>Bien involucrado</span><input id=\"f_bien\" placeholder=\"Matrícula, dominio, etc.\"></label>" +
-    "<div class=\"fila\">" +
-      "<label><span>Responsable</span><input id=\"f_resp\" value=\"Escribanía\"></label>" +
-      "<label><span>Próximo vencimiento</span><input type=\"date\" id=\"f_vence\" value=\"" + suma(30) + "\"></label>" +
-    "</div>",
+  abrir("Nuevo expediente", `
+    <div class="fila">
+      <label><span>Número</span>
+        <input id="f_nro" value="2026-${String(40+n).padStart(4,"0")}"></label>
+      <label><span>Tipo de acto</span>
+        <select id="f_acto">${ACTOS.map(a=>`<option>${a}</option>`).join("")}</select></label>
+    </div>
+    <div class="fila">
+      <label><span>Parte interviniente</span>
+        <select id="f_parte">${db.partes.map(p =>
+          `<option value="${p.id}">${esc(p.nombre)}</option>`).join("")}</select></label>
+      <label><span>Rol</span>
+        <select id="f_rol">${ROLES.map(r=>`<option>${r}</option>`).join("")}</select></label>
+    </div>
+    <label><span>Bien involucrado</span>
+      <input id="f_bien" placeholder="Matrícula, dominio, etc."></label>
+    <div class="fila">
+      <label><span>Responsable</span><input id="f_resp" value="Esc. Fantin"></label>
+      <label><span>Vencimiento</span><input type="date" id="f_vence" value="${suma(30)}"></label>
+    </div>`,
     [{txt:"Cancelar", sec:true},
      {txt:"Crear expediente", accion:() => {
         const v = i => document.getElementById(i).value;
         db.expedientes.unshift({
-          id:"e" + Date.now(), nro:v("f_nro"), acto:v("f_acto"), estado:ESTADOS[0],
+          id:"e"+Date.now(), nro:v("f_nro"), acto:v("f_acto"), estado:ESTADOS[0],
           responsable:v("f_resp"), apertura:hoy(), vence:v("f_vence"), bien:v("f_bien"),
           partes:[{parteId:v("f_parte"), rol:v("f_rol")}],
           historial:[{fecha:hoy(), texto:"Apertura del expediente"}]
@@ -291,68 +593,145 @@ function formExpediente(){
      }}]);
 }
 
-function pintarPartes(){
-  vista.innerHTML =
-    "<div class=\"barra\"><button class=\"btn\" id=\"nuevaParte\">Nueva parte</button></div>" +
-    "<div class=\"tabla-scroll\"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Documento</th>" +
-    "<th>CUIT / CUIL</th><th>Contacto</th><th>Expedientes</th></tr></thead><tbody>" +
-    db.partes.map(p => {
-      const cant = db.expedientes.filter(e => e.partes.some(x => x.parteId === p.id)).length;
-      return "<tr>" +
-        "<td><strong>" + esc(p.nombre) + "</strong><br><span class=\"venc\">" + esc(p.domicilio) + "</span></td>" +
-        "<td>" + esc(p.tipo) + "</td><td>" + esc(p.doc) + "</td><td>" + esc(p.cuit) + "</td>" +
-        "<td>" + esc(p.tel) + "<br><span class=\"venc\">" + esc(p.mail) + "</span></td>" +
-        "<td>" + cant + "</td></tr>";
-    }).join("") +
-    "</tbody></table></div>";
+/* ============================================================
+   7. MÓDULO: PARTES
+   ============================================================ */
+function vPartes(){
+  accion("Nueva parte", formParte);
+  vista.innerHTML = `<div class="scroll-x"><table>
+    <thead><tr><th>Nombre</th><th>Tipo</th><th>Documento</th><th>CUIT / CUIL</th>
+               <th>Contacto</th><th>Expedientes</th></tr></thead>
+    <tbody>${db.partes.map(p => {
+      const c = db.expedientes.filter(e => e.partes.some(x => x.parteId === p.id)).length;
+      return `<tr tabindex="0" data-id="${p.id}">
+        <td><strong>${esc(p.nombre)}</strong><br>
+            <span class="sub">${esc(p.domicilio)}</span></td>
+        <td>${esc(p.tipo)}</td>
+        <td class="mono">${esc(p.doc)}</td>
+        <td class="mono">${esc(p.cuit)}</td>
+        <td>${esc(p.tel)}<br><span class="sub">${esc(p.mail)}</span></td>
+        <td class="mono">${c}</td></tr>`;
+    }).join("")}</tbody></table></div>`;
 
-  document.getElementById("nuevaParte").onclick = () => abrir("Nueva parte",
-    "<label><span>Nombre / Razón social</span><input id=\"p_nombre\"></label>" +
-    "<div class=\"fila\">" +
-      "<label><span>Tipo</span><select id=\"p_tipo\"><option>Persona física</option>" +
-        "<option>Persona jurídica</option></select></label>" +
-      "<label><span>Documento</span><input id=\"p_doc\" placeholder=\"DNI 00.000.000\"></label>" +
-    "</div>" +
-    "<div class=\"fila\">" +
-      "<label><span>CUIT / CUIL</span><input id=\"p_cuit\"></label>" +
-      "<label><span>Estado civil</span><input id=\"p_ec\"></label>" +
-    "</div>" +
-    "<label><span>Domicilio</span><input id=\"p_dom\"></label>" +
-    "<div class=\"fila\">" +
-      "<label><span>Teléfono</span><input id=\"p_tel\"></label>" +
-      "<label><span>Correo</span><input id=\"p_mail\"></label>" +
-    "</div>",
+  vista.querySelectorAll("tbody tr").forEach(tr => {
+    tr.onclick = () => verParte(tr.dataset.id);
+    tr.onkeydown = ev => { if (ev.key === "Enter") verParte(tr.dataset.id); };
+  });
+}
+
+function verParte(id){
+  const p = parte(id);
+  const exps = db.expedientes.filter(e => e.partes.some(x => x.parteId === id));
+  abrir(esc(p.nombre), `
+    <dl class="det">
+      <dt>Tipo</dt><dd>${esc(p.tipo)}</dd>
+      <dt>Documento</dt><dd class="mono">${esc(p.doc)}</dd>
+      <dt>CUIT / CUIL</dt><dd class="mono">${esc(p.cuit)}</dd>
+      <dt>Estado civil</dt><dd>${esc(p.estadoCivil)}</dd>
+      <dt>Domicilio</dt><dd>${esc(p.domicilio)}</dd>
+      <dt>Teléfono</dt><dd>${esc(p.tel)}</dd>
+      <dt>Correo</dt><dd>${esc(p.mail)}</dd>
+    </dl>
+    <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+               color:var(--ink-3);margin:20px 0 10px">Expedientes en los que interviene</h3>
+    ${exps.length ? exps.map(e => `<div class="reng">
+        <span class="mono">${esc(e.nro)}</span><span>${esc(e.acto)}</span>
+        <span class="fin">${chipEstado(e.estado)}</span></div>`).join("")
+      : `<p class="sub">Todavía no interviene en ningún expediente.</p>`}`,
+    [{txt:"Cerrar", sec:true}]);
+}
+
+function formParte(){
+  abrir("Nueva parte", `
+    <label><span>Nombre / Razón social</span><input id="p_nombre"></label>
+    <div class="fila">
+      <label><span>Tipo</span><select id="p_tipo">
+        <option>Persona física</option><option>Persona jurídica</option></select></label>
+      <label><span>Documento</span><input id="p_doc" placeholder="DNI 00.000.000"></label>
+    </div>
+    <div class="fila">
+      <label><span>CUIT / CUIL</span><input id="p_cuit"></label>
+      <label><span>Estado civil</span><input id="p_ec"></label>
+    </div>
+    <label><span>Domicilio</span><input id="p_dom"></label>
+    <div class="fila">
+      <label><span>Teléfono</span><input id="p_tel"></label>
+      <label><span>Correo</span><input id="p_mail"></label>
+    </div>`,
     [{txt:"Cancelar", sec:true},
      {txt:"Crear parte", accion:() => {
         const v = i => document.getElementById(i).value;
         if (!v("p_nombre").trim()) return;
-        db.partes.push({id:"p" + Date.now(), nombre:v("p_nombre"), tipo:v("p_tipo"),
-          doc:v("p_doc"), cuit:v("p_cuit"), estadoCivil:v("p_ec"),
+        db.partes.push({id:"p"+Date.now(), nombre:v("p_nombre"), tipo:v("p_tipo"),
+          doc:v("p_doc")||"—", cuit:v("p_cuit")||"—", estadoCivil:v("p_ec")||"—",
           domicilio:v("p_dom"), tel:v("p_tel"), mail:v("p_mail")});
         guardar();
      }}]);
 }
 
-function pintarVencimientos(){
-  const lista = db.expedientes
-    .filter(e => e.vence && e.estado !== "Cerrado")
+/* ============================================================
+   8. MÓDULO: VENCIMIENTOS
+   ============================================================ */
+function vVencimientos(){
+  const lista = activos().filter(e => e.vence)
     .sort((a,b) => a.vence.localeCompare(b.vence));
 
-  vista.innerHTML = lista.length
-    ? "<div class=\"tabla-scroll\"><table><thead><tr><th>Vence</th><th>Expediente</th>" +
-      "<th>Acto</th><th>Estado</th><th>Responsable</th></tr></thead><tbody>" +
-      lista.map(e => "<tr data-id=\"" + e.id + "\">" +
-        "<td>" + esc(e.vence) + "<br>" + marcaVenc(e.vence) + "</td>" +
-        "<td class=\"exp\">" + esc(e.nro) + "</td>" +
-        "<td>" + esc(e.acto) + "</td>" +
-        "<td><span class=\"chip\">" + esc(e.estado) + "</span></td>" +
-        "<td>" + esc(e.responsable) + "</td></tr>").join("") +
-      "</tbody></table></div>"
-    : "<div class=\"vacio\">No hay vencimientos pendientes.</div>";
+  vista.innerHTML = lista.length ? `<div class="scroll-x"><table>
+    <thead><tr><th>Vence</th><th>Expediente</th><th>Acto</th>
+               <th>Estado</th><th>Responsable</th></tr></thead>
+    <tbody>${lista.map(e => `<tr tabindex="0" data-id="${e.id}">
+      <td class="mono">${esc(e.vence)}<br>${marcaVenc(e.vence)}</td>
+      <td class="mono">${esc(e.nro)}</td>
+      <td>${esc(e.acto)}</td>
+      <td>${chipEstado(e.estado)}</td>
+      <td>${esc(e.responsable)}</td></tr>`).join("")}</tbody></table></div>`
+    : `<div class="vacio">No hay vencimientos pendientes.</div>`;
 
-  vista.querySelectorAll("tbody tr").forEach(tr => { tr.onclick = () => verExpediente(tr.dataset.id); });
+  vista.querySelectorAll("tbody tr").forEach(tr => {
+    tr.onclick = () => verExpediente(tr.dataset.id);
+    tr.onkeydown = ev => { if (ev.key === "Enter") verExpediente(tr.dataset.id); };
+  });
 }
 
+/* ============================================================
+   9. MÓDULOS TODAVÍA NO CONSTRUIDOS
+   ============================================================ */
+const PLAN = {
+  documentos:{
+    porque:"Hoy los archivos de un trámite están repartidos entre carpetas de red, mail y papel.",
+    items:["Subir archivos y vincularlos a un expediente o a una parte",
+           "Clasificarlos por tipo: certificado, informe de dominio, DNI, plano, tasación",
+           "Guardar versiones, para saber cuál es la última",
+           "Generar borradores desde plantillas, con los datos de las partes ya cargados"]},
+  protocolo:{
+    porque:"La numeración y los folios son obligación legal y hoy se llevan aparte del resto.",
+    items:["Registro de escrituras con número y fecha",
+           "Numeración de folios y control de correlatividad",
+           "Índice del libro de protocolo",
+           "Vínculo entre cada escritura y su expediente"]},
+  reportes:{
+    porque:"Sin números, las decisiones del estudio se toman por intuición.",
+    items:["Trámites por estado, por escribano y por tipo de acto",
+           "Vencimientos del mes",
+           "Tiempo promedio desde la apertura hasta el cierre",
+           "Actividad por período"]}
+};
+
+function vPendiente(m){
+  const p = PLAN[m.id];
+  vista.innerHTML = `
+    <div class="pendiente">
+      <div class="et">Módulo pendiente</div>
+      <h2>${esc(m.tit)}</h2>
+      <p>${esc(p.porque)}</p>
+      <div class="et" style="margin-bottom:8px">Lo que va a tener</div>
+      <ul>${p.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>
+    </div>`;
+}
+
+/* ============================================================
+   10. DIÁLOGO
+   ============================================================ */
 const dlg = document.getElementById("dlg");
 function abrir(titulo, cuerpo, botones){
   document.getElementById("dlgTit").textContent = titulo;
@@ -363,22 +742,13 @@ function abrir(titulo, cuerpo, botones){
     const el = document.createElement("button");
     el.className = "btn" + (b.sec ? " sec" : "");
     el.textContent = b.txt;
-    el.onclick = () => { if (b.accion) b.accion(); dlg.close(); pintar(); };
+    el.onclick = () => { if (b.accion) b.accion(); dlg.close(); ir(modActual); };
     pie.appendChild(el);
   });
   dlg.showModal();
 }
 
-document.querySelectorAll("nav button").forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll("nav button").forEach(x => x.classList.remove("activo"));
-    b.classList.add("activo");
-    vistaActual = b.dataset.vista;
-    pintar();
-  };
-});
-
-pintar();
+ir("panel");
 </script>
 </body>
 </html>

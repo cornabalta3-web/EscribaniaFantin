@@ -21,6 +21,7 @@ escribiendo *qué* tiene que hacer el sistema y *cómo* vamos a trabajar.
 - [x] Repositorio creado
 - [ ] Visión acordada entre los dos
 - [ ] Glosario completo
-- [ ] Módulos priorizados
+- [x] Módulos priorizados
+- [x] Base del sistema y diseño (prototipo con los 7 módulos)
 - [ ] Tecnología elegida
 - [ ] Primera línea de código
