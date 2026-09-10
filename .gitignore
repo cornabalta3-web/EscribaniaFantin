@@ -1,0 +1,18 @@
+# Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*~
+
+# Datos reales: NUNCA subir al repositorio
+/datos-reales/
+/clientes/
+*.priv.*
